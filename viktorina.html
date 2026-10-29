@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Кыргызстан викторинасы</title>
+<style>
+:root{--bg:#f6f3ec;--card:#fff;--text:#1d2433;--muted:#6b7385;--accent:#d62839;--ok:#1f9d55;--bad:#d62839;--line:#e3ded2;--gold:#e0a800;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171f;--card:#1e2330;--text:#f1f1f4;--muted:#9aa1b3;--accent:#ff5a69;--ok:#3ccf7e;--bad:#ff5a69;--line:#2c3243;--gold:#ffc933}}
+:root[data-theme="dark"]{--bg:#14171f;--card:#1e2330;--text:#f1f1f4;--muted:#9aa1b3;--accent:#ff5a69;--ok:#3ccf7e;--bad:#ff5a69;--line:#2c3243;--gold:#ffc933}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;justify-content:center;padding:20px 16px}
+.wrap{width:100%;max-width:480px}
+h1{font-size:1.4rem;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:.95rem;margin-bottom:10px}
+.lives{font-size:1.2rem;letter-spacing:2px}
+.lvl{color:var(--muted)}
+.score{font-weight:700;color:var(--gold)}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:6px 0 18px}
+.bar i{display:block;height:100%;width:100%;background:var(--ok);transform-origin:left}
+.bar i.low{background:var(--bad)}
+.q{font-size:1.2rem;font-weight:600;line-height:1.35;margin:0 0 16px}
+.opt{display:block;width:100%;text-align:left;font:inherit;color:var(--text);background:transparent;border:2px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px;cursor:pointer}
+.opt:active{transform:scale(.98)}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,transparent)}
+.btn{display:block;width:100%;font:inherit;font-weight:600;color:#fff;background:var(--accent);border:0;border-radius:12px;padding:14px;margin-top:6px;cursor:pointer}
+.btn.alt{background:transparent;color:var(--text);border:2px solid var(--line)}
+.c{text-align:center}
+.big{font-size:3.2rem;margin:4px 0}
+.c p{color:var(--muted);margin:6px 0 16px;line-height:1.4}
+.hide{display:none}
+.shake{animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+.lv{font:inherit;font-weight:700;aspect-ratio:1;border-radius:12px;border:2px solid var(--line);background:transparent;color:var(--text);cursor:pointer}
+.lv.done{background:color-mix(in srgb,var(--ok) 20%,transparent);border-color:var(--ok)}
+.lv.cur{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.lv:disabled{opacity:.35;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏔️ Кыргызстан викторинасы</h1>
+
+  <div class="card c" id="map">
+    <div class="score" id="tot"></div>
+    <p>Деңгээлди танда (1–100). Деңгээл өйдө чыккан сайын суроо көбөйөт, убакыт кыскарат, жан азаят жана суроолор татаалдайт.</p>
+    <div class="grid" id="grid"></div>
+    <button class="btn alt" id="reset">Баштан баштоо</button>
+  </div>
+
+  <div class="card hide" id="game">
+    <div class="top"><span class="lives" id="lives"></span><span class="lvl" id="lvl"></span><span class="score" id="score"></span></div>
+    <div class="bar"><i id="bar"></i></div>
+    <p class="q" id="q"></p>
+    <div id="opts"></div>
+    <button class="btn hide" id="next">Кийинки →</button>
+  </div>
+
+  <div class="card c hide" id="end">
+    <div class="big" id="emoji"></div>
+    <h2 id="total"></h2>
+    <p id="msg"></p>
+    <button class="btn" id="again"></button>
+    <button class="btn alt" id="tomap">Деңгээлдер</button>
+  </div>
+</div>
+<script>
+var POOL=[
+[
+["Кыргызстандын борбору кайсы шаар?","Бишкек",["Ош","Нарын","Каракол"]],
+["Кыргызстандын акчасы кандай аталат?","Сом",["Теңге","Рубль","Манат"]],
+["Кыргыз эркектеринин улуттук баш кийими кайсы?","Ак калпак",["Тебетей","Бөрк","Селде"]],
+["Кыргыздын улуттук ичимдиги кайсы?","Кымыз",["Чай","Айран","Компот"]],
+["Кыргызстандагы эң чоң көл кайсы?","Ысык-Көл",["Чатыр-Көл","Соң-Көл","Сары-Челек"]],
+["Боз үйдүн чатырындагы тегерек эмне деп аталат?","Түндүк",["Кереге","Уук","Туурдук"]],
+["Кыргызстан кайсы тоо тизмегинде жайгашкан?","Теңир-Тоо",["Алтай","Гималай","Кавказ"]],
+["Кыргызстандын түштүк борбору деп кайсы шаарды аташат?","Ош",["Талас","Баткен","Токмок"]]],
+[
+["Нооруз майрамы качан белгиленет?","21-март",["1-январь","1-май","31-август"]],
+["Кыргызстан эгемендүүлүгүн кайсы жылы жарыялаган?","1991",["1985","1995","2001"]],
+["«Жамийла» повестинин автору ким?","Чыңгыз Айтматов",["Касым Тыныстанов","Токтогул Сатылганов","Аалы Токомбаев"]],
+["Кыргызстандын эң бийик чокусу кайсы?","Жеңиш чокусу",["Ленин чокусу","Хан-Теңири","Эверест"]],
+["Кыргызстандын туусундагы күндүн канча нуру бар?","40",["12","24","60"]],
+["Кыргыздын үч кылдуу улуттук аспабы кайсы?","Комуз",["Домбыра","Дутар","Рубаб"]],
+["Кыргызстандын туусу кайсы түстө?","Кызыл",["Көк","Жашыл","Ак"]],
+["Кыргызстан менен чектешпеген өлкө кайсы?","Түркмөнстан",["Казакстан","Өзбекстан","Кытай"]]],
+[
+["Манастын жубайынын аты ким?","Каныкей",["Айчүрөк","Санирабийга","Бакай"]],
+["Кыргызстандагы эң узун дарыя кайсы?","Нарын",["Чүй","Талас","Ала-Арча"]],
+["Бишкек 1926–1991-жылдары кандай аталган?","Фрунзе",["Пишпек","Оштон","Ленинабад"]],
+["Көк бөрү оюнунда эмени таласышат?","Улак",["Топ","Кубок","Жүгөн"]],
+["Токтогул Сатылганов эмнеси менен белгилүү?","Акын жана комузчу",["Манасчы","Жазуучу","Хан"]],
+["Манастын аты кандай аталган?","Аккула",["Тайбуурул","Көкжал","Булан"]],
+["Кыргызстан БУУга кайсы жылы кирген?","1992",["1991","1995","2000"]],
+["Таш-Рабат деген эмне?","Байыркы караван-сарай",["Тоо чокусу","Көл","Дарыя"]],
+["Сулайман-Тоо кайсы шаарда жайгашкан?","Ош",["Бишкек","Каракол","Нарын"]]]
+];
+function $(id){return document.getElementById(id)}
+function shuffle(a){a=a.slice();for(var k=a.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=a[k];a[k]=a[j];a[j]=t}return a}
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+var S={unlocked:1,total:0};
+try{var r=JSON.parse(localStorage.getItem("kg100"));if(r)S=r}catch(e){}
+function save(){try{localStorage.setItem("kg100",JSON.stringify(S))}catch(e){}}
+function show(id){["map","game","end"].forEach(function(x){$(x).classList.toggle("hide",x!==id)})}
+function secs(n){return Math.max(5,Math.round(20-n*0.15))}
+function qCount(n){return 5+Math.floor(n/20)}
+function maxLives(n){return n<=40?3:n<=75?2:1}
+function math(n){
+  var m=Math.ceil(n/12),a,b,c,ans,txt;
+  var t=n<25?rnd(0,1):n<50?rnd(1,2):n<75?rnd(2,3):rnd(3,4);
+  if(t===0){a=rnd(5,10*m+10);b=rnd(5,10*m+10);ans=a+b;txt=a+" + "+b}
+  else if(t===1){a=rnd(10*m,20*m+20);b=rnd(3,a-1);ans=a-b;txt=a+" − "+b}
+  else if(t===2){var mx=Math.min(25,10+Math.floor(n/6));a=rnd(2,mx);b=rnd(2,mx);ans=a*b;txt=a+" × "+b}
+  else if(t===3){a=rnd(3,15);b=rnd(3,15);c=rnd(10,60+n);ans=a*b+c;txt=a+" × "+b+" + "+c}
+  else{a=rnd(10,25);b=rnd(10,25);c=rnd(2,9);var e=rnd(2,9);ans=a*b-c*e;txt=a+" × "+b+" − "+c+" × "+e}
+  var w={};w[ans]=1;var o=[ans];
+  var cnt=4+(n>=50?1:0)+(n>=80?1:0),sp=Math.max(3,10-Math.floor(n/12)),g=0;while(o.length<cnt&&g++<200){var d=ans+rnd(-sp,sp);if(d>=0&&!w[d]){w[d]=1;o.push(d)}}
+  return ["Эсепте: "+txt+" = ?",String(ans),o.slice(1).map(String)]
+}
+function makeQs(n){
+  var tier=n<=30?0:n<=70?1:2,pm=Math.min(0.75,n/100),out=[],pool=shuffle(POOL[tier]);
+  if(tier>0)pool=pool.concat(shuffle(POOL[tier-1]).slice(0,3));
+  pool=shuffle(pool);
+  for(var k=0;k<qCount(n);k++){out.push(n>=10&&Math.random()<pm?math(n):(pool.pop()||math(n)))}
+  return out
+}
+var N,qs,I,lives,maxL,score,locked,tm,t0,dur;
+function drawMap(){
+  $("tot").textContent="⭐ Жалпы упай: "+S.total;
+  var g=$("grid");g.innerHTML="";
+  for(var n=1;n<=100;n++){(function(n){
+    var b=document.createElement("button");b.className="lv"+(n<S.unlocked?" done":n===S.unlocked?" cur":"");
+    b.textContent=n;b.disabled=n>S.unlocked;b.onclick=function(){play(n)};g.appendChild(b)})(n)
+  }
+  show("map")
+}
+function play(n){N=n;qs=makeQs(n);I=0;maxL=maxLives(n);lives=maxL;score=0;ask()}
+function hud(){
+  $("lives").textContent="❤️".repeat(lives)+"🖤".repeat(maxL-lives);
+  $("lvl").textContent="Деңгээл "+N+" · "+(I+1)+"/"+qs.length;
+  $("score").textContent="⭐ "+score
+}
+function ask(){
+  locked=false;var q=qs[I];dur=secs(N)*1000;
+  show("game");hud();
+  $("q").textContent=q[0];$("next").classList.add("hide");
+  var box=$("opts");box.innerHTML="";
+  shuffle([q[1]].concat(q[2])).forEach(function(t){
+    var b=document.createElement("button");b.className="opt";b.textContent=t;
+    b.onclick=function(){if(!locked)resolve(b,t)};box.appendChild(b)
+  });
+  t0=Date.now();clearInterval(tm);tm=setInterval(tick,50);tick()
+}
+function tick(){
+  var left=Math.max(0,dur-(Date.now()-t0));
+  $("bar").style.transform="scaleX("+(left/dur)+")";
+  $("bar").classList.toggle("low",left<dur*0.3);
+  if(left<=0){clearInterval(tm);if(!locked)resolve(null,null)}
+}
+function resolve(b,t){
+  locked=true;clearInterval(tm);
+  var right=qs[I][1];
+  if(t===right){score+=10+Math.ceil(Math.max(0,dur-(Date.now()-t0))/1000);b.classList.add("ok")}
+  else{lives--;if(b)b.classList.add("bad");$("game").classList.remove("shake");void $("game").offsetWidth;$("game").classList.add("shake")}
+  Array.prototype.forEach.call($("opts").children,function(x){if(x.textContent===right)x.classList.add("ok")});
+  hud();
+  $("next").textContent=(lives===0||I===qs.length-1)?"Жыйынтык":"Кийинки →";
+  $("next").classList.remove("hide")
+}
+$("next").onclick=function(){
+  if(lives===0)return finish(false);
+  I++;I>=qs.length?finish(true):ask()
+};
+function finish(win){
+  if(win){S.total+=score;if(N===S.unlocked&&N<100)S.unlocked=N+1;save()}
+  var last=win&&N===100;
+  $("emoji").textContent=last?"👑":win?"🏆":"💔";
+  $("total").textContent=last?"100 деңгээл бүттү! Чемпион!":win?N+"-деңгээл өттү! ⭐ "+score:"Жан түгөндү";
+  $("msg").textContent=win?"Кийинки деңгээлде убакыт азыраак болот.":"Эч нерсе эмес, кайра аракет кыл!";
+  $("again").textContent=win&&N<100?"Кийинки деңгээл →":"Кайра ойноо";
+  $("again").onclick=function(){play(win&&N<100?N+1:N)};
+  show("end")
+}
+$("tomap").onclick=drawMap;
+$("reset").onclick=function(){if(confirm("Бардык жетишкендик өчүрүлөт. Макулбу?")){S={unlocked:1,total:0};save();drawMap()}};
+drawMap();
+</script>
+</body>
+</html>
